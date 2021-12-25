@@ -1,0 +1,55 @@
+version: '3.7'
+
+services:
+    mongodb:
+        image: mongo:latest
+        restart: always
+        ports:
+            - "27017:27017"
+    zookeeper:
+        container_name: zookeeper
+        image: confluentinc/cp-zookeeper:5.3.1
+        restart: always
+        ports:
+            - 2181:2181
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+            JVM_OPTS: "-Xms32M -XX:MaxRAM=860M"
+        volumes:
+            - zookeeper:/data
+            - zookeeper:/datalog
+        networks:
+            - bubble
+    kafka:
+        container_name: kafka
+        image: confluentinc/cp-kafka:6.0.2
+        restart: always
+        ports:
+            - 9092:9092
+            - 9093:9093
+        depends_on:
+            - zookeeper
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_LOG_RETENTION_HOURS: 2160
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://kafka:9093
+            KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+            KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_LOG4J_LOGGERS: 'kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO'
+            JVM_OPTS: "-Xms32M -XX:MaxRAM=860M"
+        volumes:
+            - kafka:/var/lib/kafka/data
+        networks:
+            - bubble
+
+volumes:
+    zookeeper:
+    kafka:
+
+networks:
+    bubble:
+        external: true

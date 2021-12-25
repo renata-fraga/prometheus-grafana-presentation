@@ -1,0 +1,31 @@
+spring:
+    data:
+        mongodb:
+            uri: mongodb://localhost:27017/ob-consent-core?minPoolSize=0&maxPoolSize=3
+    cloud:
+        stream:
+            kafka:
+                binder:
+                    auto-create-topics: true
+                    brokers: kafka:9092
+            bindings:
+                consentEventListener-in-0:
+                    destination: consent_events
+                    group: consent-core
+        function:
+            definition: consentEventListener
+
+management:
+    health:
+        diskspace:
+            enabled: false
+    endpoint:
+        health:
+            show-details: always
+    endpoints:
+        web:
+            base-path: "/"
+            exposure:
+                include: prometheus, health
+            path-mapping:
+                prometheus: metrics
