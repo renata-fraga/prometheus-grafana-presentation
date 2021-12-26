@@ -9,7 +9,7 @@ import io.micrometer.core.instrument.Timer;
 
 import java.util.function.Supplier;
 
-public interface CustomRegister {
+public interface CustomMeterRegistry {
 
     void count(final CounterMetric metric, final Iterable<Tag> tags);
 

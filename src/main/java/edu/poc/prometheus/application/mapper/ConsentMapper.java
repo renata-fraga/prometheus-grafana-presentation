@@ -12,19 +12,23 @@ import lombok.NoArgsConstructor;
 public final class ConsentMapper {
 
     public static Consent mapFromConsentEvent(final ConsentEvent consentEvent) {
-        return new Consent(consentEvent.consentId(),
-            ConsentStatus.valueOf(consentEvent.status()),
-            consentEvent.rejectReason(),
-            ConsentType.valueOf(consentEvent.consentType()),
-            consentEvent.metadata());
+        return Consent.builder()
+            .consentId(consentEvent.consentId())
+            .status(ConsentStatus.valueOf(consentEvent.status()))
+            .rejectReason(consentEvent.rejectReason())
+            .consentType(ConsentType.valueOf(consentEvent.consentType()))
+            .metadata(consentEvent.metadata())
+            .build();
     }
 
     public static Consent mapFromConsentRequest(final ConsentRequest consentRequest) {
-        return new Consent(consentRequest.consentId(),
-            ConsentStatus.valueOf(consentRequest.status()),
-            consentRequest.rejectReason(),
-            ConsentType.valueOf(consentRequest.consentType()),
-            consentRequest.metadata());
+        return Consent.builder()
+            .consentId(consentRequest.consentId())
+            .status(ConsentStatus.valueOf(consentRequest.status()))
+            .rejectReason(consentRequest.rejectReason())
+            .consentType(ConsentType.valueOf(consentRequest.consentType()))
+            .metadata(consentRequest.metadata())
+            .build();
     }
 
 }

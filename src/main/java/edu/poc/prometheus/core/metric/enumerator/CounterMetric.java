@@ -9,7 +9,8 @@ import lombok.RequiredArgsConstructor;
 public enum CounterMetric {
 
     CONSENT_EVENT_VALID("consent_event_valid", "valid consent event counter"),
-    CONSENT_EVENT_INVALID("consent_event_invalid", "invalid consent event counter");
+    CONSENT_EVENT_INVALID("consent_event_invalid", "invalid consent event counter"),
+    CONSENT_SAVED("consent_saved_by_status", "count all consents by status");
 
     private final String metricName;
 

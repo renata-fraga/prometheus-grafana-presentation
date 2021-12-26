@@ -1,6 +1,6 @@
 package edu.poc.prometheus.infra.metric.impl;
 
-import edu.poc.prometheus.core.metric.CustomRegister;
+import edu.poc.prometheus.core.metric.CustomMeterRegistry;
 import edu.poc.prometheus.core.metric.enumerator.CounterMetric;
 import edu.poc.prometheus.core.metric.enumerator.GaugeMetric;
 import edu.poc.prometheus.core.metric.enumerator.SummaryMetric;
@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 
 @RequiredArgsConstructor
 @Component
-public class CustomRegisterImpl implements CustomRegister {
+public class CustomMeterRegistryImpl implements CustomMeterRegistry {
 
     private final MeterRegistry meterRegistry;
 

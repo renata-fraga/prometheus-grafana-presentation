@@ -2,7 +2,7 @@ package edu.poc.prometheus.application.processor;
 
 import edu.poc.prometheus.application.mapper.ConsentMapper;
 import edu.poc.prometheus.application.validation.ObjectValidator;
-import edu.poc.prometheus.core.metric.CustomRegister;
+import edu.poc.prometheus.core.metric.CustomMeterRegistry;
 import edu.poc.prometheus.core.metric.tag.TagValue;
 import edu.poc.prometheus.core.usecase.CreateConsentUseCase;
 import edu.poc.prometheus.infra.stream.event.ConsentEvent;
@@ -23,7 +23,7 @@ public class ConsentProcessor {
 
     private final MeterRegistry meterRegistry;
 
-    private final CustomRegister customRegister;
+    private final CustomMeterRegistry customMeterRegistry;
 
     private final CreateConsentUseCase createConsentUseCase;
 
@@ -35,7 +35,7 @@ public class ConsentProcessor {
         try {
             objectValidator.validateFields(consentEvent);
 
-            customRegister.count(CONSENT_EVENT_VALID, buildTags(buildTagsFromEvent()));
+            customMeterRegistry.count(CONSENT_EVENT_VALID, buildTags(buildTagsFromEvent()));
         } catch (RuntimeException ex) {
             incrementFail();
         }

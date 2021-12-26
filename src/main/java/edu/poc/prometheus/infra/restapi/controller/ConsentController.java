@@ -1,7 +1,7 @@
 package edu.poc.prometheus.infra.restapi.controller;
 
 import edu.poc.prometheus.core.enumerator.ConsentStatus;
-import edu.poc.prometheus.core.metric.CustomRegister;
+import edu.poc.prometheus.core.metric.CustomMeterRegistry;
 import edu.poc.prometheus.core.metric.tag.TagValue;
 import edu.poc.prometheus.core.usecase.CountConsentUseCase;
 import edu.poc.prometheus.core.usecase.CreateConsentUseCase;
@@ -40,7 +40,7 @@ public class ConsentController {
 
     private final MeterRegistry meterRegistry;
 
-    private final CustomRegister customRegister;
+    private final CustomMeterRegistry customMeterRegistry;
 
     private final CreateConsentUseCase createConsentUseCase;
 
@@ -51,7 +51,7 @@ public class ConsentController {
     public ConsentCountResponse countByStatus(@RequestParam final ConsentStatus status) {
         val total = countConsentUseCase.countByStatus(status);
 
-        customRegister.gauge(CONSENT_COUNT_BY_STATUS, () -> total, Tags.of("consent_status", status.name()));
+        customMeterRegistry.gauge(CONSENT_COUNT_BY_STATUS, () -> total, Tags.of("consent_status", status.name()));
 
         return new ConsentCountResponse(total);
     }
@@ -60,9 +60,9 @@ public class ConsentController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public void create(@RequestBody final ConsentRequest consentRequest, final HttpServletRequest servletRequest) {
-        val timer = customRegister.buildTimer(CONSENT_CREATE_HTTP_TIMER, CONSENT_CREATE_HTTP_TIMER_DESCRIPTION, buildTags(buildTagsToTimer()));
+        val timer = customMeterRegistry.buildTimer(CONSENT_CREATE_HTTP_TIMER, CONSENT_CREATE_HTTP_TIMER_DESCRIPTION, buildTags(buildTagsToTimer()));
 
-        customRegister.buildSummary(CONSENT_CREATE_HTTP_SUMMARY, buildTags(buildTagsToSummary()))
+        customMeterRegistry.buildSummary(CONSENT_CREATE_HTTP_SUMMARY, buildTags(buildTagsToSummary()))
             .record(servletRequest.getContentLengthLong());
 
         timer.record(() -> {
