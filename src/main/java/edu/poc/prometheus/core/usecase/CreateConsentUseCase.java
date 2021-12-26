@@ -5,10 +5,16 @@ import edu.poc.prometheus.core.domain.Consent;
 import edu.poc.prometheus.infra.database.repository.ConsentRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static edu.poc.prometheus.core.metric.enumerator.TimerMetric.CONSENT_EXIST_BY_CONSENTID;
+import static edu.poc.prometheus.core.metric.enumerator.TimerMetric.CONSENT_EXIST_BY_CONSENTID_DESCRIPTION;
+
+@RequiredArgsConstructor
 @Service
 public class CreateConsentUseCase {
 
@@ -16,16 +22,9 @@ public class CreateConsentUseCase {
 
     private final ConsentRepository consentRepository;
 
-    private final Timer timer;
-
-    public CreateConsentUseCase(final MeterRegistry meterRegistry, final ConsentRepository consentRepository) {
-        this.meterRegistry = meterRegistry;
-        this.consentRepository = consentRepository;
-        this.timer = buildTimer();
-    }
-
     public void process(final Consent consent) {
-        final AtomicBoolean exists = new AtomicBoolean(false);
+        val exists = new AtomicBoolean(false);
+        val timer = buildTimer();
 
         timer.record(() -> {
             exists.set(consentRepository.existsByConsentId(consent.consentId()));
@@ -37,8 +36,8 @@ public class CreateConsentUseCase {
     }
 
     private Timer buildTimer() {
-        return Timer.builder("consent_core_exists_by_consent_id")
-            .description("timer exists by consentId query")
+        return Timer.builder(CONSENT_EXIST_BY_CONSENTID)
+            .description(CONSENT_EXIST_BY_CONSENTID_DESCRIPTION)
             //.tags("service", "create", "create_timer")
             .register(meterRegistry);
     }

@@ -2,16 +2,17 @@ package edu.poc.prometheus.application.processor;
 
 import edu.poc.prometheus.application.mapper.ConsentMapper;
 import edu.poc.prometheus.application.validation.ObjectValidator;
+import edu.poc.prometheus.core.metric.CustomRegister;
 import edu.poc.prometheus.core.usecase.CreateConsentUseCase;
-import edu.poc.prometheus.core.util.CustomRegister;
-import edu.poc.prometheus.infra.metric.enumerator.MetricName;
 import edu.poc.prometheus.infra.stream.event.ConsentEvent;
-import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import static edu.poc.prometheus.core.metric.enumerator.CounterMetric.CONSENT_EVENT_INVALID;
+import static edu.poc.prometheus.core.metric.enumerator.CounterMetric.CONSENT_EVENT_VALID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,7 +27,6 @@ public class ConsentProcessor {
 
     private final ObjectValidator<ConsentEvent> objectValidator;
 
-    @Timed(value = "consent_core_create_kafka_timer")
     public void process(final ConsentEvent consentEvent) {
         log.info("method: process | params: consentEvent - {}", consentEvent);
 
@@ -42,12 +42,12 @@ public class ConsentProcessor {
     }
 
     private void incrementSuccess() {
-        customRegister.count(MetricName.COUNT_VALID_EVENT, new String[]{"counter", "consent_events"});
+        customRegister.count(CONSENT_EVENT_VALID, new String[]{"h", "h"});
     }
 
     private void incrementFail() {
-        Counter.builder("consent_core_invalid_event")
-            .description("invalid consent event")
+        Counter.builder(CONSENT_EVENT_INVALID.getMetricName())
+            .description(CONSENT_EVENT_INVALID.getDescription())
             .tag("counter", "invalid_consent_events")
             .register(meterRegistry)
             .increment();

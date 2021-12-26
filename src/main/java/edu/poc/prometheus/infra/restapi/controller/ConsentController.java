@@ -9,7 +9,6 @@ import edu.poc.prometheus.infra.restapi.response.ConsentCountResponse;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -24,7 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static edu.poc.prometheus.infra.metric.enumerator.MetricName.GAUGE_COUNT_BY_STATUS;
+import static edu.poc.prometheus.core.metric.enumerator.GaugeMetric.CONSENT_COUNT_BY_STATUS;
+import static edu.poc.prometheus.core.metric.enumerator.SummaryMetric.CONSENT_CREATE_HTTP_SUMMARY;
+import static edu.poc.prometheus.core.metric.enumerator.TimerMetric.CONSENT_CREATE_HTTP_TIMER;
+import static edu.poc.prometheus.core.metric.enumerator.TimerMetric.CONSENT_CREATE_HTTP_TIMER_DESCRIPTION;
 
 @RequiredArgsConstructor
 @RequestMapping("/v1/consents")
@@ -42,9 +44,9 @@ public class ConsentController {
     public ConsentCountResponse countByStatus(@RequestParam final ConsentStatus status) {
         val total = countConsentUseCase.countByStatus(status);
 
-        Gauge.builder(GAUGE_COUNT_BY_STATUS.getMetricName(), () -> total)
-            .description(GAUGE_COUNT_BY_STATUS.getDescription())
-           // .tags("consent_core", "status_gauge", status.name())
+        Gauge.builder(CONSENT_COUNT_BY_STATUS.getMetricName(), () -> total)
+            .description(CONSENT_COUNT_BY_STATUS.getDescription())
+            // .tags("consent_core", "status_gauge", status.name())
             .register(meterRegistry);
 
         return new ConsentCountResponse(total);
@@ -55,13 +57,14 @@ public class ConsentController {
     @PostMapping
     public void create(@RequestBody final ConsentRequest consentRequest, final HttpServletRequest servletRequest) {
 
-        val timer = Timer.builder("consent_core_create_http_timer")
-            .description("timer of calls of consent creation")
+        val timer = Timer.builder(CONSENT_CREATE_HTTP_TIMER)
+            .description(CONSENT_CREATE_HTTP_TIMER_DESCRIPTION)
             .tag("input", "create_http")
             .register(meterRegistry);
 
-        DistributionSummary.builder("consent_core_create_http_summary")
-            .description("summary size requests")
+        DistributionSummary.builder(CONSENT_CREATE_HTTP_SUMMARY.getMetricName())
+            .description(CONSENT_CREATE_HTTP_SUMMARY.getDescription())
+            .baseUnit("bytes")
             .tag("input", "create_http")
             .register(meterRegistry)
             .record(servletRequest.getContentLengthLong());
