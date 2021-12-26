@@ -7,9 +7,12 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public enum SummaryMetric {
-    CONSENT_CREATE_HTTP_SUMMARY("consent_create_http_summary", "distribution summary of the size of the number of requests");
+    CONSENT_CREATE_HTTP_SUMMARY("consent_create_http_summary", "distribution summary of the size of the number of requests",
+        "bytes");
 
     private final String metricName;
 
     private final String description;
+
+    private final String baseUnit;
 }

@@ -1,7 +1,8 @@
 package edu.poc.prometheus.infra.restapi.controller;
 
-import edu.poc.prometheus.application.mapper.ConsentMapper;
 import edu.poc.prometheus.core.enumerator.ConsentStatus;
+import edu.poc.prometheus.core.metric.CustomRegister;
+import edu.poc.prometheus.core.metric.tag.TagValue;
 import edu.poc.prometheus.core.usecase.CountConsentUseCase;
 import edu.poc.prometheus.core.usecase.CreateConsentUseCase;
 import edu.poc.prometheus.infra.restapi.request.ConsentRequest;
@@ -9,7 +10,7 @@ import edu.poc.prometheus.infra.restapi.response.ConsentCountResponse;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Tags;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.http.HttpStatus;
@@ -23,10 +24,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 
+import java.util.function.Supplier;
+
+import static edu.poc.prometheus.application.mapper.ConsentMapper.mapFromConsentRequest;
 import static edu.poc.prometheus.core.metric.enumerator.GaugeMetric.CONSENT_COUNT_BY_STATUS;
 import static edu.poc.prometheus.core.metric.enumerator.SummaryMetric.CONSENT_CREATE_HTTP_SUMMARY;
 import static edu.poc.prometheus.core.metric.enumerator.TimerMetric.CONSENT_CREATE_HTTP_TIMER;
 import static edu.poc.prometheus.core.metric.enumerator.TimerMetric.CONSENT_CREATE_HTTP_TIMER_DESCRIPTION;
+import static edu.poc.prometheus.core.metric.tag.TagUtil.buildTags;
 
 @RequiredArgsConstructor
 @RequestMapping("/v1/consents")
@@ -34,6 +39,8 @@ import static edu.poc.prometheus.core.metric.enumerator.TimerMetric.CONSENT_CREA
 public class ConsentController {
 
     private final MeterRegistry meterRegistry;
+
+    private final CustomRegister customRegister;
 
     private final CreateConsentUseCase createConsentUseCase;
 
@@ -44,10 +51,7 @@ public class ConsentController {
     public ConsentCountResponse countByStatus(@RequestParam final ConsentStatus status) {
         val total = countConsentUseCase.countByStatus(status);
 
-        Gauge.builder(CONSENT_COUNT_BY_STATUS.getMetricName(), () -> total)
-            .description(CONSENT_COUNT_BY_STATUS.getDescription())
-            // .tags("consent_core", "status_gauge", status.name())
-            .register(meterRegistry);
+        customRegister.gauge(CONSENT_COUNT_BY_STATUS, () -> total, Tags.of("consent_status", status.name()));
 
         return new ConsentCountResponse(total);
     }
@@ -56,22 +60,38 @@ public class ConsentController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public void create(@RequestBody final ConsentRequest consentRequest, final HttpServletRequest servletRequest) {
+        val timer = customRegister.buildTimer(CONSENT_CREATE_HTTP_TIMER, CONSENT_CREATE_HTTP_TIMER_DESCRIPTION, buildTags(buildTagsToTimer()));
 
-        val timer = Timer.builder(CONSENT_CREATE_HTTP_TIMER)
-            .description(CONSENT_CREATE_HTTP_TIMER_DESCRIPTION)
-            .tag("input", "create_http")
+        customRegister.buildSummary(CONSENT_CREATE_HTTP_SUMMARY, buildTags(buildTagsToSummary()))
+            .record(servletRequest.getContentLengthLong());
+
+        timer.record(() -> {
+            createConsentUseCase.process(mapFromConsentRequest(consentRequest));
+        });
+    }
+
+    private static TagValue buildTagsToTimer() {
+        return new TagValue("consent_core", "timer", "post", "http", "controller");
+    }
+
+    private static TagValue buildTagsToSummary() {
+        return new TagValue("consent_core", "summary", "post", "http", "controller");
+    }
+
+    private void gauge(final Supplier<Number> totalSupplier, final ConsentStatus consentStatus) {
+
+        Gauge.builder(CONSENT_COUNT_BY_STATUS.getMetricName(), totalSupplier)
+            .description(CONSENT_COUNT_BY_STATUS.getDescription())
+             .tags("consent_status", consentStatus.name())
             .register(meterRegistry);
+    }
+
+    private void summary() {
 
         DistributionSummary.builder(CONSENT_CREATE_HTTP_SUMMARY.getMetricName())
             .description(CONSENT_CREATE_HTTP_SUMMARY.getDescription())
             .baseUnit("bytes")
-            .tag("input", "create_http")
-            .register(meterRegistry)
-            .record(servletRequest.getContentLengthLong());
-
-        timer.record(() -> {
-            createConsentUseCase.process(ConsentMapper.mapFromConsentRequest(consentRequest));
-        });
+            .tag("entrypoint", "http")
+            .register(meterRegistry);
     }
-
 }

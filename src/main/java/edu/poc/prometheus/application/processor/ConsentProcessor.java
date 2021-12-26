@@ -3,6 +3,7 @@ package edu.poc.prometheus.application.processor;
 import edu.poc.prometheus.application.mapper.ConsentMapper;
 import edu.poc.prometheus.application.validation.ObjectValidator;
 import edu.poc.prometheus.core.metric.CustomRegister;
+import edu.poc.prometheus.core.metric.tag.TagValue;
 import edu.poc.prometheus.core.usecase.CreateConsentUseCase;
 import edu.poc.prometheus.infra.stream.event.ConsentEvent;
 import io.micrometer.core.instrument.Counter;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import static edu.poc.prometheus.core.metric.enumerator.CounterMetric.CONSENT_EVENT_INVALID;
 import static edu.poc.prometheus.core.metric.enumerator.CounterMetric.CONSENT_EVENT_VALID;
+import static edu.poc.prometheus.core.metric.tag.TagUtil.buildTags;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,16 +35,12 @@ public class ConsentProcessor {
         try {
             objectValidator.validateFields(consentEvent);
 
-            incrementSuccess();
+            customRegister.count(CONSENT_EVENT_VALID, buildTags(buildTagsFromEvent()));
         } catch (RuntimeException ex) {
             incrementFail();
         }
 
         createConsentUseCase.process(ConsentMapper.mapFromConsentEvent(consentEvent));
-    }
-
-    private void incrementSuccess() {
-        customRegister.count(CONSENT_EVENT_VALID, new String[]{"h", "h"});
     }
 
     private void incrementFail() {
@@ -53,4 +51,7 @@ public class ConsentProcessor {
             .increment();
     }
 
+    private static TagValue buildTagsFromEvent() {
+        return new TagValue("consent_core", "counter", "create", "kafka", "processor");
+    }
 }
