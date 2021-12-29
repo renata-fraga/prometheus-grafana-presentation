@@ -6,8 +6,9 @@ spring:
         stream:
             kafka:
                 binder:
+                    replicationFactor: 1
                     auto-create-topics: true
-                    brokers: kafka:9092
+                    brokers: localhost:9093
             bindings:
                 consentEventListener-in-0:
                     destination: consent_events
