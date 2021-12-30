@@ -26,3 +26,11 @@ make up-api
 ```shell
 make down
 ```
+
+# Login in grafana
+* user: admin
+* password: local
+
+# reference
+* [apresentação weekly ](https://picpay.slack.com/archives/C016MBLUR7T/p1640631288080800)
+* [material](https://picpay.slack.com/files/U01BXJM64G1/F02QV1BA8BF/prometheus_grafana_apresentacao_2022)

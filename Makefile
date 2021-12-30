@@ -1,14 +1,14 @@
 up-grafana:
-	cd docker-local && docker compose up -d grafana
+	docker compose up -d grafana
 
 up:
-	cd docker-local && docker compose up -d
+	docker compose up -d && docker compose -f docker-compose-io.yml up -d
 
 up-api:
-	cd docker-local && docker compose up -d api.prometheus.grafana.presentation --build
+	docker compose up -d api.prometheus.grafana.presentation --build
 
 down:
-	cd docker-local && docker compose down
+	docker compose down && docker compose -f docker-compose-io.yml down
 
 install:
 	gradle build
