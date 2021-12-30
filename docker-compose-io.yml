@@ -1,10 +1,10 @@
 version: '3.7'
 
 services:
-    api.prometheus.grafana.presentation:
-        container_name: api.prometheus.grafana.presentation
-        hostname: api.prometheus.grafana.presentation
-        image: api.prometheus.grafana.presentation
+    api:
+        container_name: api
+        hostname: api
+        image: api
         depends_on:
             - mongodb
             - kafka

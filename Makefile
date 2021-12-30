@@ -5,10 +5,13 @@ up:
 	docker compose up -d && docker compose -f docker-compose-io.yml up -d
 
 up-api:
-	docker compose up -d api.prometheus.grafana.presentation --build
+	docker compose  -f docker-compose-io.yml up -d --build
 
 down:
-	docker compose down && docker compose -f docker-compose-io.yml down
+	docker compose -f docker-compose-io.yml down
+
+down-grafana:
+	docker compose down
 
 install:
 	gradle build
